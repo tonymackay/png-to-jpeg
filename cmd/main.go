@@ -15,7 +15,7 @@ var sema = make(chan struct{}, runtime.NumCPU())
 
 func main() {
 	//start := time.Now()
-	path := flag.String("input-dir", ".", "Path to a directory containing JPEG images to convert")
+	path := flag.String("dir", ".", "Path to a directory containing PNG images to convert")
 	flag.Parse()
 
 	filePaths := make(chan string)
