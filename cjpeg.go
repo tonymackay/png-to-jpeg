@@ -2,20 +2,16 @@ package main
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 func cjpeg(path string, quality int64) error {
 	// replace ext with jpg for output path
 	ext := filepath.Ext(path)
-	if strings.ToLower(ext) != ".png" {
-		return errors.New("error: invalid input file")
-	}
-
+	name := filepath.Base(path)
 	outfile := path[0:len(path)-len(ext)] + ".jpg"
 
 	cmd := exec.Command("cjpeg", "-quality", strconv.FormatInt(quality, 10), "-optimize", "-progressive", "-outfile", outfile, path)
@@ -26,5 +22,7 @@ func cjpeg(path string, quality int64) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("converted: %s\n", name)
 	return nil
 }

@@ -9,62 +9,48 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
-var sema = make(chan struct{}, runtime.NumCPU())
-
 func main() {
-	//start := time.Now()
+	start := time.Now()
+
 	path := flag.String("dir", ".", "Path to a directory containing PNG images to convert")
+	workers := flag.Int("workers", runtime.NumCPU(), "Maximum amount of goroutines to use")
 	quality := flag.Int64("quality", 75, "Image Quality, N between 5-95")
 
 	flag.Parse()
 
-	filePaths := make(chan string)
-	var n sync.WaitGroup
-	n.Add(1)
-	go walkDir(*path, &n, filePaths)
+	var wg = sync.WaitGroup{}
+	var guard = make(chan struct{}, *workers)
+	walkDir(*path, quality, &wg, &guard)
+	wg.Wait()
 
-	go func() {
-		n.Wait()
-		close(filePaths)
-	}()
-
-	var nfiles int
-	for path := range filePaths {
-		nfiles++
-
-		err := cjpeg(path, *quality)
-		if err != nil {
-			fmt.Printf("failed: %s\n", err)
-		}
-
-		fmt.Printf("%d files %s\n", nfiles, path)
-	}
-	//fmt.Println(time.Since(start))
+	fmt.Printf("finished: %s\n", time.Since(start))
 }
 
-func walkDir(dir string, n *sync.WaitGroup, filePaths chan<- string) {
-	defer n.Done()
+func walkDir(dir string, quality *int64, wg *sync.WaitGroup, guard *chan struct{}) {
 	for _, entry := range dirents(dir) {
 		if entry.IsDir() {
-			n.Add(1)
 			subdir := filepath.Join(dir, entry.Name())
-			walkDir(subdir, n, filePaths)
+			walkDir(subdir, quality, wg, guard)
 		} else {
 			// only send PNG images
 			path := filepath.Join(dir, entry.Name())
-			ext := strings.ToLower(filepath.Ext(path))
-			if ext == ".png" {
-				filePaths <- path
+			if strings.ToLower(filepath.Ext(path)) == ".png" {
+				*guard <- struct{}{}
+				wg.Add(1)
+				go func() {
+					cjpeg(path, *quality)
+					<-*guard
+					wg.Done()
+				}()
 			}
 		}
 	}
 }
 
 func dirents(dir string) []os.FileInfo {
-	sema <- struct{}{}        // acquire token
-	defer func() { <-sema }() // release token
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
