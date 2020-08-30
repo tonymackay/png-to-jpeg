@@ -16,6 +16,8 @@ var sema = make(chan struct{}, runtime.NumCPU())
 func main() {
 	//start := time.Now()
 	path := flag.String("dir", ".", "Path to a directory containing PNG images to convert")
+	quality := flag.Int64("quality", 75, "Image Quality, N between 5-95")
+
 	flag.Parse()
 
 	filePaths := make(chan string)
@@ -31,6 +33,12 @@ func main() {
 	var nfiles int
 	for path := range filePaths {
 		nfiles++
+
+		err := cjpeg(path, *quality)
+		if err != nil {
+			fmt.Printf("failed: %s\n", err)
+		}
+
 		fmt.Printf("%d files %s\n", nfiles, path)
 	}
 	//fmt.Println(time.Since(start))
