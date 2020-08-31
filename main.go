@@ -16,15 +16,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 var name = "png-to-jpeg"
 var version = "dev"
 
 func main() {
-	start := time.Now()
-
 	path := flag.String("dir", ".", "Path to a directory containing PNG images to convert")
 	workers := flag.Int("workers", runtime.NumCPU(), "Maximum amount of goroutines to use")
 	quality := flag.Int64("quality", 75, "Image Quality, N between 5-95")
@@ -42,8 +39,6 @@ func main() {
 	var guard = make(chan struct{}, *workers)
 	walkDir(*path, quality, &wg, &guard)
 	wg.Wait()
-
-	fmt.Printf("finished: %s\n", time.Since(start))
 }
 
 func usage() {
