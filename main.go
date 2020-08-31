@@ -15,14 +15,24 @@ import (
 	"time"
 )
 
+var name = "png-to-jpeg"
+var version = "dev"
+
 func main() {
 	start := time.Now()
 
 	path := flag.String("dir", ".", "Path to a directory containing PNG images to convert")
 	workers := flag.Int("workers", runtime.NumCPU(), "Maximum amount of goroutines to use")
 	quality := flag.Int64("quality", 75, "Image Quality, N between 5-95")
+	showVersion := flag.Bool("version", false, "Print the version")
 
+	flag.Usage = usage
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("%s version %s (runtime: %s)\n", name, version, runtime.Version())
+		os.Exit(0)
+	}
 
 	var wg = sync.WaitGroup{}
 	var guard = make(chan struct{}, *workers)
@@ -30,6 +40,16 @@ func main() {
 	wg.Wait()
 
 	fmt.Printf("finished: %s\n", time.Since(start))
+}
+
+func usage() {
+	fmt.Printf("usage: %s [options]\n\n", name)
+	fmt.Printf("Options:\n")
+	flag.PrintDefaults()
+	fmt.Printf("\nExamples:\n")
+	fmt.Printf("  %s -dir images\n", name)
+	fmt.Printf("  %s -dir images -quality 60\n", name)
+	fmt.Printf("  %s -dir images -quality 60 -workers 1\n\n", name)
 }
 
 func walkDir(dir string, quality *int64, wg *sync.WaitGroup, guard *chan struct{}) {
