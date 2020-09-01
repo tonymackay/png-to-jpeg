@@ -11,6 +11,8 @@ Options:
         Path to a directory containing PNG images to convert (default ".")
   -quality int
         Image Quality, N between 5-95 (default 75)
+  -stats
+        Display amount of converted images and size differences
   -version
         Print the version
   -workers int
@@ -20,6 +22,21 @@ Examples:
   png-to-jpeg -dir images
   png-to-jpeg -dir images -quality 60
   png-to-jpeg -dir images -quality 60 -workers 1
+```
+
+Example:
+
+```
+png-to-jpeg % ./png-to-jpeg -dir images -stats
+converted: images/example.png to: images/example.jpg
+converted: images/subdirectory/subdirectory-2/example-2.png to: images/subdirectory/subdirectory-2/example-2.jpg
+converted: images/subdirectory/example.png to: images/subdirectory/example.jpg
+converted: images/subdirectory/subdirectory-2/example.png to: images/subdirectory/subdirectory-2/example.jpg
+
+converted: 4
+old size: 1.8 MiB
+new size: 514.7 KiB
+saved:    71.58%
 ```
 
 ## Building
