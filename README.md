@@ -42,23 +42,14 @@ saved:    71.58%
 ## Building
 This tool requires the MozJPEG package to be installed. For Mac users it can be installed with `brew install mozjpeg`.
 
-Clone the repo then run the following commands:
+To make a release, clone the repo and run the following command:
 
 ```   
-go build
+./make.sh release
 ```
 
-To install it run:
+The binaries will be placed in the build folder. 
 
-```
-go install
-```
-
-To assign a version when building use the `-ldflags` option of the `build` or `install` command. For example: 
-
-```
-go build -ldflags=-X=main.version=v1.0.0
-```
 
 ## License
 [MIT License](LICENSE)
