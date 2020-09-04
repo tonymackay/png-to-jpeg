@@ -5,7 +5,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -92,7 +91,10 @@ func walkDir(dir string, quality *int64, wg *sync.WaitGroup, guard *chan struct{
 					wg.Add(1)
 					defer wg.Done()
 					defer func() { <-*guard }()
-					cjpeg(path, *quality, fileSizes)
+					err := cjpeg(path, *quality, fileSizes)
+					if err != nil {
+						fmt.Printf("error: %s\n", err)
+					}
 				}()
 			}
 		}
@@ -111,20 +113,25 @@ func dirents(dir string) []os.FileInfo {
 func cjpeg(path string, quality int64, fileSizes chan<- sizes) error {
 	// replace ext with jpg for output path
 	ext := filepath.Ext(path)
-	//name := filepath.Base(path)
 	outfile := path[0:len(path)-len(ext)] + ".jpg"
 	q := strconv.FormatInt(quality, 10)
 	cmd := exec.Command("cjpeg", "-quality", q, "-optimize", "-progressive", "-outfile", outfile, path)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = cmd.Stdout
+
 	err := cmd.Run()
 	if err != nil {
 		return err
 	}
 
-	originalSize, _ := fileSize(path)
-	newSize, _ := fileSize(outfile)
+	originalSize, err := fileSize(path)
+
+	if err != nil {
+		return fmt.Errorf("failed to get size of file: %s reason: %s", path, err)
+	}
+
+	newSize, err := fileSize(outfile)
+	if err != nil {
+		return fmt.Errorf("failed to get size of file: %s reason: %s", outfile, err)
+	}
 
 	fileSizes <- sizes{
 		original:     originalSize,
@@ -136,7 +143,6 @@ func cjpeg(path string, quality int64, fileSizes chan<- sizes) error {
 }
 
 func fileSize(path string) (int64, error) {
-	// get file size
 	fi, err := os.Stat(path)
 	if err != nil {
 		return 0, err
