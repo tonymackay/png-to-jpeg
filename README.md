@@ -1,6 +1,14 @@
 # Batch PNG to JPEG Converter
 `png-to-jpeg` is a command line tool written in Go that recursively converts all PNG images in a directory to JPEGs using the Mozilla JPEG Encoder.
 
+Update: it turns out this program is not required as the same can be done with a single line of bash:
+
+```
+find $ARG -name "*.png" -print0 | xargs -0 -I{} -P4 bash -c 'cjpeg -quality 75 -progressive -optimize -outfile "${1%.png}.jpg" $1' -- {}
+```
+
+However, I will leave this repo up because it does have the option to show `-stats`.
+
 ## Usage
 
 ```
